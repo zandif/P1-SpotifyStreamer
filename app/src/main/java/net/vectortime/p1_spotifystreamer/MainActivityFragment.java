@@ -35,7 +35,6 @@ import kaaes.spotify.webapi.android.models.Image;
  */
 public class MainActivityFragment extends Fragment {
     private ArtistArrayAdapter mArtistsAdapter;
-    private boolean searchInProgress = false;
 
     public MainActivityFragment() {
     }
@@ -55,10 +54,9 @@ public class MainActivityFragment extends Fragment {
             public void onTextChanged(CharSequence s, int start, int before, int count) {
                 if (s.length() < 1)
                     return;
-                if (!searchInProgress) {
-                    SearchSpotifyArtistsTask searchTask = new SearchSpotifyArtistsTask();
-                    searchTask.execute(s.toString());
-                }
+
+                SearchSpotifyArtistsTask searchTask = new SearchSpotifyArtistsTask();
+                searchTask.execute(s.toString());
             }
 
             @Override
@@ -215,17 +213,18 @@ public class MainActivityFragment extends Fragment {
 
     private class SearchSpotifyArtistsTask extends AsyncTask<String, Void, ArtistInfo[]> {
         private final String LOG_TAG = SearchSpotifyArtistsTask.class.getSimpleName();
+        private String artistQueryName;
 
         @Override
         protected ArtistInfo[] doInBackground(String... params) {
             if (params.length == 0){
                 return null;
             }
-            String artistQueryName = params[0];
+            artistQueryName = params[0];
 
             SpotifyApi api = new SpotifyApi();
 
-            ArtistsPager results = api.getService().searchArtists(artistQueryName);
+            ArtistsPager results = api.getService().searchArtists(artistQueryName + "*");
             List<Artist> artists = results.artists.items;
             List<ArtistInfo> info = new ArrayList<>();
             for (int i = 0; i < artists.size(); i++){
@@ -255,12 +254,11 @@ public class MainActivityFragment extends Fragment {
             } else {
                 // Display a toast
                 Context context = getActivity();
-                CharSequence text = "No results found for that artist";
+                CharSequence text = "No results found for that artist: " + artistQueryName;
                 int duration = Toast.LENGTH_SHORT;
                 Toast toast = Toast.makeText(context, text, duration);
                 toast.show();
             }
-            searchInProgress = false;
         }
     }
 }
