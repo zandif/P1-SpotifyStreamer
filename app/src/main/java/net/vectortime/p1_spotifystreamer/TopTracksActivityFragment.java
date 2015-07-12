@@ -1,12 +1,10 @@
 package net.vectortime.p1_spotifystreamer;
 
-import android.app.ActionBar;
 import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.support.v4.app.Fragment;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -18,6 +16,8 @@ import android.widget.Toast;
 
 import com.squareup.picasso.Picasso;
 
+import net.vectortime.p1_spotifystreamer.dataClasses.TrackInfo;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -25,10 +25,8 @@ import java.util.Locale;
 import java.util.Map;
 
 import kaaes.spotify.webapi.android.SpotifyApi;
-import kaaes.spotify.webapi.android.models.Image;
 import kaaes.spotify.webapi.android.models.Track;
 import kaaes.spotify.webapi.android.models.Tracks;
-
 
 /**
  * A placeholder fragment containing a simple view.
@@ -38,6 +36,9 @@ public class TopTracksActivityFragment extends Fragment {
     private String mArtistName;
     private String mArtistImageURL;
     private String mArtistId;
+    private ArrayList<TrackInfo> mTracksList;
+
+    private final String PARCEL_KEY = "tracks";
 
     public TopTracksActivityFragment() {
     }
@@ -49,9 +50,16 @@ public class TopTracksActivityFragment extends Fragment {
     }
 
     @Override
+    public void onSaveInstanceState(Bundle outState){
+        outState.putParcelableArrayList(PARCEL_KEY, mTracksList);
+//        Log.i(TopTracksActivityFragment.class.getSimpleName(), "Saving " + mTracksList.size() +
+//                " entries to parcel.");
+        super.onSaveInstanceState(outState);
+    }
+
+    @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-
 
         View rootView = inflater.inflate(R.layout.fragment_toptracks, container, false);
 
@@ -70,24 +78,27 @@ public class TopTracksActivityFragment extends Fragment {
             }
         }
 
-        ArrayList<TrackInfo> topTracksTestData = new ArrayList<>(10);
-//        topTracksTestData.add(new TrackInfo("0", "A Sky Full of Stars", "0", null, "Ghost " +
+        if (savedInstanceState == null || !savedInstanceState.containsKey(PARCEL_KEY)) {
+            mTracksList = new ArrayList<>(10);
+        } else {
+            mTracksList = savedInstanceState.getParcelableArrayList(PARCEL_KEY);
+//            Log.i(TopTracksActivityFragment.class.getSimpleName(), "Got " + mTracksList.size() + " " +
+//                    "entries from parcel.");
+        }
+
+//        mTracksList.add(new TrackInfo("0", "A Sky Full of Stars", "0", null, "Ghost " +
 //                "Stories"));
-//        topTracksTestData.add(new TrackInfo("1", "Fix You", "1", null, "X&Y"));
-//        topTracksTestData.add(new TrackInfo("2", "The Scientist", "2", null, "A Rush of Blood to " +
+//        mTracksList.add(new TrackInfo("1", "Fix You", "1", null, "X&Y"));
+//        mTracksList.add(new TrackInfo("2", "The Scientist", "2", null, "A Rush of Blood to " +
 //                "the..."));
 
-        ActionBar ab = getActivity().getActionBar();
-        if (ab != null)
-            ab.setSubtitle("Hello fragment");
-
         mTracksAdapter = new TopTracksArrayAdapter(getActivity(),R.layout.list_item_toptracks,
-                topTracksTestData);
+                mTracksList);
 
         ListView myListView = (ListView) rootView.findViewById(R.id.listview_toptracks);
         myListView.setAdapter(mTracksAdapter);
 
-        if (mArtistId != null) {
+        if (mArtistId != null && mTracksList.size() < 1) {
             SearchSpotifyTopTracksTask searchTask = new SearchSpotifyTopTracksTask();
             searchTask.execute(mArtistId);
         }
@@ -105,7 +116,7 @@ public class TopTracksActivityFragment extends Fragment {
             }
             String artistQueryId = params[0];
 
-            Log.i(LOG_TAG, "artistID: " + artistQueryId);
+//            Log.i(LOG_TAG, "artistID: " + artistQueryId);
             SpotifyApi api = new SpotifyApi();
             Map<String, Object> map = new HashMap<>();
             map.put("country", Locale.getDefault().getCountry());
@@ -114,7 +125,7 @@ public class TopTracksActivityFragment extends Fragment {
             List<TrackInfo> info = new ArrayList<>();
             for (int i = 0; i < tracks.tracks.size(); i++){
                 Track track = tracks.tracks.get(i);
-                Log.i(LOG_TAG, i + " " + track.name);
+//                Log.i(LOG_TAG, i + " " + track.name);
                 info.add(new TrackInfo(track.id, track.name, track.album.id, track.album.images,
                         track.album.name));
             }
@@ -140,7 +151,6 @@ public class TopTracksActivityFragment extends Fragment {
                 Toast toast = Toast.makeText(context, text, duration);
                 toast.show();
             }
-
         }
     }
 
@@ -180,43 +190,6 @@ public class TopTracksActivityFragment extends Fragment {
             ablumName.setText(trackInfo.albumTitle);
 
             return convertView;
-        }
-    }
-
-    private class TrackInfo {
-
-        String songId;
-        String songTitle;
-        String ablumId;
-        List<Image> images;
-        String albumTitle;
-
-        public TrackInfo(String inId, String inName, String inAlbumId, List<Image> inAlbumImages,
-                         String inAlbumName) {
-            this.songId = inId;
-            this.songTitle = inName;
-            this.ablumId = inAlbumId;
-            this.images = inAlbumImages;
-            this.albumTitle = inAlbumName;
-        }
-
-        public String getSmallestImage() {
-            String returnString = null;
-            int smallest_size = 0;
-            if (images != null && images.size() > 0)
-
-                for (int i = 0; i < images.size(); i++) {
-                    if (smallest_size == 0) {
-                        smallest_size = images.get(i).width;
-                        returnString = images.get(i).url;
-                    }
-
-                    if (images.get(i).width < smallest_size) {
-                        returnString = images.get(i).url;
-                        smallest_size = images.get(i).width;
-                    }
-                }
-            return returnString;
         }
     }
 }

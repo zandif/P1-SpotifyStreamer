@@ -31,7 +31,8 @@
             android:layout_width="match_parent"
             android:layout_height="16dp"
             android:layout_marginLeft="16dp"
-            android:id="@+id/list_item_toptracks_albumtitle_textview"/>
+            android:id="@+id/list_item_toptracks_albumtitle_textview"
+            android:textColor="@android:color/secondary_text_dark"/>
     </LinearLayout>
 
 </LinearLayout>
