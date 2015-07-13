@@ -1,23 +1,45 @@
 package net.vectortime.p1_spotifystreamer;
 
 import android.content.Intent;
+import android.support.v4.app.Fragment;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
-
 public class TopTracksActivity extends ActionBarActivity {
+    final String FRAGMENT_KEY = "mFragment";
+    Fragment mFragment;
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        if (mFragment != null)
+            getSupportFragmentManager().putFragment(outState, FRAGMENT_KEY, mFragment);
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_toptracks);
 
+//        // Original method
+//        if (savedInstanceState == null) {
+//            getSupportFragmentManager().beginTransaction()
+//                    .add(R.id.toptracks_fragment, new TopTracksActivityFragment())
+//                    .commit();
+//        }
+
+        // Attempt to use the saved fragment?
         if (savedInstanceState == null) {
+//            Log.d(TopTracksActivity.class.getSimpleName(),"Generate new fragment");
+            mFragment = new TopTracksActivityFragment();
             getSupportFragmentManager().beginTransaction()
-                    .add(R.id.toptracks_fragment, new TopTracksActivityFragment())
-                    .commit();
+                    .add(R.id.toptracks_fragment, mFragment).commit();
+        } else {
+//            Log.d(TopTracksActivity.class.getSimpleName(),"Use Existing fragment");
+            mFragment = getSupportFragmentManager().getFragment(savedInstanceState, FRAGMENT_KEY);
         }
 
         // Set up the sub-title
